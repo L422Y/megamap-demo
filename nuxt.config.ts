@@ -1,12 +1,17 @@
 export default defineNuxtConfig({
-  compatibilityDate: '2024-04-03',
-  devtools: { enabled: true },
+  compatibilityDate: "2024-04-03",
+  devtools: {enabled: true},
+  modules: [
+    "@nuxt/eslint",
+    "@nuxt/ui",
+    "@pinia/nuxt"
+  ],
   nitro: {
-    preset: 'cloudflare'
+    preset: "cloudflare"
   },
   runtimeConfig: {
     public: {
-      apiBase: '/api'
+      apiBase: "/api"
     }
   }
 })

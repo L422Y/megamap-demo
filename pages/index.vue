@@ -1,65 +1,133 @@
+<!-- pages/index.vue -->
 <template>
-  <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4">MegaMap Demo</h1>
+  <div class="min-h-screen">
+    <UContainer class="py-8">
+      <!-- Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold mb-2">Job Listings</h1>
+        <p class="text-gray-600">Find your next opportunity</p>
+      </div>
 
-    <div class="mb-4">
-      <h2 class="text-xl font-semibold">Reactive MegaMap</h2>
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <h3 class="font-semibold mb-2">Published</h3>
-          <div v-for="item in reactiveMegaMap.subLists.published" :key="item._id" class="p-2 bg-gray-100 rounded">
-            {{ item.data }}
-          </div>
-        </div>
-        <div>
-          <h3 class="font-semibold mb-2">Draft</h3>
-          <div v-for="item in reactiveMegaMap.subLists.draft" :key="item._id" class="p-2 bg-gray-100 rounded">
-            {{ item.data }}
-          </div>
+      <!-- Filters -->
+      <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <USelect
+              v-model="jobStore.filters.status"
+              :options="['active', 'draft', 'closed']"
+              clearable
+              placeholder="Status"
+          />
+          <USelect
+              v-model="jobStore.filters.type"
+              :options="['Full-time', 'Part-time', 'Contract', 'Remote']"
+              clearable
+              placeholder="Job Type"
+          />
+          <USelect
+              v-model="jobStore.filters.experienceLevel"
+              :options="['Entry Level', 'Mid Level', 'Senior', 'Lead', 'Manager']"
+              clearable
+              placeholder="Experience Level"
+          />
+          <UInput
+              v-model="jobStore.filters.search"
+              icon="i-heroicons-magnifying-glass"
+              placeholder="Search jobs..."
+          />
         </div>
       </div>
-    </div>
 
-    <div class="mb-4">
-      <h2 class="text-xl font-semibold">MegaMap with Search</h2>
-      <input v-model="searchQuery" type="text" class="border rounded p-2 mb-2" placeholder="Search..." />
-      <div class="grid grid-cols-2 gap-4">
-        <div v-for="item in filteredItems" :key="item._id" class="p-2 bg-gray-100 rounded">
-          {{ item.data }}
-        </div>
+      <!-- Job Listings -->
+      <div class="space-y-4">
+        <UCard
+            v-for="job in jobStore.filteredJobs"
+            :key="job._id"
+            :ui="{ base: 'transition-all hover:shadow-lg' }"
+            @click="navigateToJob(job._id)"
+        >
+          <div class="flex items-start gap-4">
+            <UAvatar
+                :alt="job.company"
+                :src="job.companyLogo"
+                size="lg"
+            />
+            <div class="flex-1">
+              <div class="flex items-start justify-between">
+                <div>
+                  <h3 class="text-lg font-semibold">{{ job.title }}</h3>
+                  <p class="text-gray-600">{{ job.company }} • {{ job.location }}</p>
+                </div>
+                <UBadge
+                    :color="getStatusColor(job.status)"
+                    class="capitalize"
+                    size="sm"
+                >
+                  {{ job.status }}
+                </UBadge>
+              </div>
+              <div class="mt-2">
+                <div class="flex flex-wrap gap-2">
+                  <UBadge
+                      v-for="skill in job.requiredSkills"
+                      :key="skill"
+                      color="gray"
+                      size="xs"
+                      variant="subtle"
+                  >
+                    {{ skill }}
+                  </UBadge>
+                </div>
+              </div>
+              <div class="mt-4 flex items-center justify-between text-sm">
+                <div class="text-gray-600">
+                  ${{ formatSalary(job.salary.min) }} - ${{ formatSalary(job.salary.max) }} / year
+                </div>
+                <div class="text-gray-500">
+                  Posted {{ formatDate(job.created_at) }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </UCard>
       </div>
-    </div>
+    </UContainer>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
-import { useFetch } from '@nuxtjs/composition-api';
-import { ReactiveMegaMap, MegaMap } from 'megamap';
+const jobStore = useJobStore()
+const router = useRouter()
 
-const { data: posts } = await useFetch('/api/posts');
-const { data: post } = await useFetch('/api/posts/{id}');
+onMounted(() => {
+  jobStore.initialize()
+})
 
-const reactiveMegaMap = new ReactiveMegaMap({
-  loadOne: async (key: string) => post.value,
-  loadAll: async () => posts.value,
-  subListFilters,
-});
+const getStatusColor = (status: string) => {
+  switch (status) {
 
-const megaMap = new MegaMap({
-  loadOne: async (key: string) => post.value,
-  loadAll: async () => posts.value,
-  searchableFields: ['data'],
-  subListFilters,
-});
+    case "active":
+      return "green"
+    case "draft":
+      return "yellow"
+    case "closed":
+      return "red"
+    default:
+      return "gray"
+  }
+}
 
-const searchQuery = ref('');
+const formatSalary = (amount: number) => {
+  return ( amount / 1000 ).toFixed(0) + "k"
+}
 
-const filteredItems = computed(() => {
-  return megaMap.searchItems(searchQuery.value);
-});
+const formatDate = (date: string) => {
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  })
+}
 
-// Load initial data
-await reactiveMegaMap.getAll();
-await megaMap.getAll();
+const navigateToJob = (id: string) => {
+  router.push(`/jobs/${id}`)
+}
 </script>
