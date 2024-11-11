@@ -51,6 +51,44 @@ export const useJobStore = defineStore("jobs", () => {
     await jobMap.getAll()
   }
 
+  // Get related jobs based on skills and company
+  const getRelatedJobs = (currentJob: JobT, limit = 3) => {
+    return Object.values(jobMap.value)
+      .filter(job =>
+        job._id !== currentJob._id &&
+        job.status === "active" &&
+        (
+          // Same company or matching skills
+          job.companyId === currentJob.companyId ||
+          job.requiredSkills.some(skill =>
+            currentJob.requiredSkills.includes(skill)
+          )
+        )
+      )
+      .sort((a, b) => {
+        // Score jobs based on skill matches
+        const aMatches = a.requiredSkills.filter(skill =>
+          currentJob.requiredSkills.includes(skill)
+        ).length
+        const bMatches = b.requiredSkills.filter(skill =>
+          currentJob.requiredSkills.includes(skill)
+        ).length
+        return bMatches - aMatches
+      })
+      .slice(0, limit)
+  }
+
+  // Get jobs from the same company
+  const getCompanyJobs = (companyId: string, currentJobId: string, limit = 2) => {
+    return Object.values(jobMap.value)
+      .filter(job =>
+        job.companyId === companyId &&
+        job._id !== currentJobId &&
+        job.status === "active"
+      )
+      .slice(0, limit)
+  }
+
   // Computed property for filtered jobs
   const filteredJobs = computed(() => {
     let results = Object.values(jobMap.value)
@@ -76,5 +114,7 @@ export const useJobStore = defineStore("jobs", () => {
     filters,
     filteredJobs,
     initialize,
+    getRelatedJobs,
+    getCompanyJobs,
   }
 })
