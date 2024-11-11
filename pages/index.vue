@@ -34,17 +34,21 @@
 
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
+import { useFetch } from '@nuxtjs/composition-api';
 import { ReactiveMegaMap, MegaMap } from 'megamap';
 
+const { data: posts } = await useFetch('/api/posts');
+const { data: post } = await useFetch('/api/posts/{id}');
+
 const reactiveMegaMap = new ReactiveMegaMap({
-  loadOne: fakeRecordLoad,
-  loadAll: fakeMultipleRecordLoad,
+  loadOne: async (key: string) => post.value,
+  loadAll: async () => posts.value,
   subListFilters,
 });
 
 const megaMap = new MegaMap({
-  loadOne: fakeRecordLoad,
-  loadAll: fakeMultipleRecordLoad,
+  loadOne: async (key: string) => post.value,
+  loadAll: async () => posts.value,
   searchableFields: ['data'],
   subListFilters,
 });
