@@ -34,7 +34,7 @@ A modern job board demo showcasing real-time filtering, searching, and state man
 1. Clone the repository
 ```bash
 git clone https://github.com/l422y/megamap-demo
-cd job-board-demo
+cd megamap-demo
 ```
 
 2. Install dependencies
