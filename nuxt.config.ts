@@ -4,7 +4,8 @@ export default defineNuxtConfig({
   modules: [
     "@nuxt/eslint",
     "@nuxt/ui",
-    "@pinia/nuxt"
+    "@pinia/nuxt",
+    "@nuxt/scripts"
   ],
   runtimeConfig: {
     public: {
